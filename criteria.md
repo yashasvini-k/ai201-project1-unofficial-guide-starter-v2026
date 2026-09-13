@@ -26,6 +26,8 @@ contains the answer.
 <!-- e.g. "One of my questions is about a topic only two documents mention, so
      I expect that one to be hard." -->
 
+I chose 4 out of 5 because most of my test questions are directly based on information in the guide documents, so the correct information should usually be retrieved. I allowed one miss because some questions combine information from different sections or documents and may be harder to retrieve accurately.
+
 ---
 
 ## 2. Every answer names a source
@@ -35,6 +37,8 @@ Every answer the system produces names at least one source document.
 **Why this target:**
 <!-- Why all five and not four? What about your setup makes that achievable —
      or what would have to go wrong for it not to be? -->
+
+I chose all 5 because every answer should be based on the provided guide documents rather than the model's general knowledge. Since my system only needs to answer questions from a small, defined corpus, identifying at least one source should be achievable unless the retrieval or answer-generation pipeline fails.
 
 ---
 
@@ -53,9 +57,13 @@ in at least 4 of 5 tries.
 <!-- What did your distances look like when you set the cutoff in Milestone 4?
      Was there a clean gap, or did the two groups overlap? -->
 
+I chose 4 out of 5 because the out-of-scope questions should be clearly different from the topics covered by my guide documents. The relevance gate should therefore reject most questions that have no supporting information, while allowing one possible mistake because similarity scores can sometimes overlap between relevant and irrelevant questions.
+
 ---
 
 ## 4. Something about your chunks
+
+At least 4 of my 5 sampled chunks should contain a complete, readable piece of information without cutting a sentence off at the beginning or end.
 
 <!-- YOU WRITE THIS ONE.
 
@@ -73,11 +81,13 @@ in at least 4 of 5 tries.
 
 **Why this target:**
 
-
+My guides contain relatively short sections with complete paragraphs of practical information, so chunks that preserve complete thoughts should work well for retrieval. I chose 4 out of 5 because one chunk may occasionally fall at an awkward boundary while still being useful.
 
 ---
 
 ## 5. Your choice
+
+For at least 4 of my 5 test questions, the answer should name the correct guide document as its source.
 
 <!-- YOU WRITE THIS ONE TOO.
 
@@ -91,7 +101,7 @@ in at least 4 of 5 tries.
 
 **Why this target:**
 
-
+My questions are based on specific guide documents, such as the accessibility, Brightwater, eating, transport, and seasons guides, so the system should be able to identify where its information came from. I chose 4 out of 5 because an answer may combine information from multiple guides or occasionally attribute a detail imperfectly.
 
 ---
 
