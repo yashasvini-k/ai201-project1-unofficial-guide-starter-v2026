@@ -294,9 +294,11 @@ def build_prompt(question: str, results) -> str:
         f"[from {r.source}]\n{r.text}" for r in results
     )
     return (
-        f"Documents:\n\n{context}\n\n"
-        f"---\n\nQuestion: {question}\n\n"
-        f"Answer using only the documents above, and name the file you used."
+    f"Documents:\n\n{context}\n\n"
+    f"---\n\nQuestion: {question}\n\n"
+    f"Answer using only the information in the documents above, and name the file you used. "
+    f"Do not use outside knowledge. If the documents do not contain enough information "
+    f"to answer the question, say that you do not have enough information."
     )
 
 

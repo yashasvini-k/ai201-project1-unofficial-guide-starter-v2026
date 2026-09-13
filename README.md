@@ -1,6 +1,6 @@
 # The Unofficial Guide
 
-<!-- Replace this line with your name and which corpus you picked. -->
+Yashasvini Kattelu, city_guides
 
 > **This file is your submission.** Fill it in as you go — most sections get
 > written during the milestone that produces them, not at the end.
@@ -27,6 +27,15 @@
      this repo.
 
      Milestone 5. -->
+
+
+This project is a retrieval-augmented generation (RAG) system built around a
+collection of regional travel guides. It retrieves the most relevant chunks
+from the guides based on a user's question and uses those chunks to generate
+an answer. The system also uses a relevance cutoff to refuse questions that
+are outside the information covered by the guides. The corpus covers topics
+such as accessibility, transportation, food, accommodations, seasons, and
+individual towns in the region.
 
 ## Chunking Strategy
 
@@ -129,7 +138,15 @@ without creating too much duplicated text.
 
 **Question:**
 
+Which town is the easiest in the region for someone with limited mobility, and what specific features make it accessible?
+
 **Answer:**
+
+Thornby Wells is the easiest town in the region for someone with limited mobility. It is accessible because it is flat, compact, everything is within three minutes of everything else, parking is free for two hours anywhere in town, the station is central, and the pump room and gardens are level throughout.
+
+**Source:** 
+
+guide_accessibility.md, guide_corry_vale.md, guide_kestrelford.md
 
 ```
 ```
@@ -145,9 +162,20 @@ without creating too much duplicated text.
 
      Milestone 4. -->
 
+I set my relevance cutoff to **0.6**. The five in-corpus questions had best distances ranging from **0.3181 to 0.6076**, while the five out-of-scope questions ranged from **0.8293 to 0.9026**. There is a clear gap between the in-corpus and out-of-scope questions, although two in-corpus questions were slightly above 0.6. I kept 0.6 as the cutoff because it accepts most relevant questions while rejecting all five clearly out-of-scope questions.
+
 | Question | In corpus? | Best distance |
 |---|---|---|
-|  |  |  |
+| 1 | Yes | 0.4406 |
+| 2 | Yes | 0.3181 |
+| 3 | Yes | 0.4491 |
+| 4 | Yes | 0.5961 |
+| 5 | Yes | 0.6076 |
+| 6 | No | 0.8874 |
+| 7 | No | 0.8969 |
+| 8 | No | 0.9026 |
+| 9 | No | 0.8293 |
+| 10 | No | 0.8529 |
 
 ## How I Used AI
 
@@ -160,9 +188,22 @@ without creating too much duplicated text.
 
      Milestone 5. -->
 
-**1.**
+**1.** 
+
+I used AI to help choose a chunking strategy for my travel-guide
+corpus. I explained that the documents contain relatively short paragraphs
+and topic-based sections, and AI recommended paragraph-aware chunking with a
+500-character chunk size and 75-character overlap. I implemented and tested
+the strategy myself and used `python app.py chunks` to inspect the resulting
+chunks.
 
 **2.**
+
+I used AI to help evaluate my retrieval results and choose a relevance
+cutoff. I provided the distances from my five in-scope and five out-of-scope
+questions, and AI helped me compare the two groups. I kept the cutoff at 0.6
+because it rejected all five out-of-scope questions, although one in-scope
+question was slightly above the cutoff.
 
 <!-- ── Stretch features ─────────────────────────────────────────────────────
      Doing one? Say so here BEFORE you start. A feature this README never
