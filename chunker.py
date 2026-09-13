@@ -82,22 +82,82 @@ def fallback_split(
 
 def split_documents(documents: list[Document]) -> list[Chunk]:
     """
-    Split documents into chunks. ⚠️ REPLACE THE BODY OF THIS IN MILESTONE 3.
+    Split documents into paragraph-based chunks.
 
-    Right now it just calls the fallback. That is the plain, generic behaviour
-    the brief is talking about.
-
-    When you write your own strategy, set `produced_by` to
-    "chunker.py::split_documents" so your README's Sample Chunks section names
-    the right function. `app.py chunks` prints that string for you.
-
-    Things worth thinking about before you write any code:
-      - Are your documents short posts or long guides?
-      - Is the useful information in one sentence, or spread over a paragraph?
-      - Would splitting on paragraph breaks keep more thoughts intact than
-        splitting on a character count?
+    Paragraphs are kept together when possible. If a paragraph is too large,
+    it is split into smaller pieces using the configured chunk size.
     """
-    return fallback_split(documents)
+    chunk_size = config.CHUNK_SIZE
+    overlap = config.CHUNK_OVERLAP
+
+    chunks: list[Chunk] = []
+
+    for doc in documents:
+        paragraphs = [p.strip() for p in doc.text.split("\n\n") if p.strip()]
+
+        current = ""
+        index = 0
+
+        for paragraph in paragraphs:
+            if len(paragraph) <= chunk_size:
+                if not current:
+                    current = paragraph
+                elif len(current) + 2 + len(paragraph) <= chunk_size:
+                    current += "\n\n" + paragraph
+                else:
+                    chunks.append(
+                        Chunk(
+                            text=current,
+                            source=doc.source,
+                            index=index,
+                            produced_by="chunker.py::split_documents",
+                        )
+                    )
+                    index += 1
+
+                    overlap_text = current[-overlap:] if overlap else ""
+                    current = overlap_text + "\n\n" + paragraph
+            else:
+                if current:
+                    chunks.append(
+                        Chunk(
+                            text=current,
+                            source=doc.source,
+                            index=index,
+                            produced_by="chunker.py::split_documents",
+                        )
+                    )
+                    index += 1
+                    current = ""
+
+                start = 0
+                while start < len(paragraph):
+                    piece = paragraph[start:start + chunk_size].strip()
+
+                    if piece:
+                        chunks.append(
+                            Chunk(
+                                text=piece,
+                                source=doc.source,
+                                index=index,
+                                produced_by="chunker.py::split_documents",
+                            )
+                        )
+                        index += 1
+
+                    start += chunk_size - overlap
+
+        if current:
+            chunks.append(
+                Chunk(
+                    text=current,
+                    source=doc.source,
+                    index=index,
+                    produced_by="chunker.py::split_documents",
+                )
+            )
+
+    return chunks
 
 
 def describe(chunks: list[Chunk]) -> str:

@@ -30,8 +30,19 @@
 
 ## Chunking Strategy
 
-**Chunk size:**
-**Overlap:**
+**Chunk size:** 500 characters 
+**Overlap:** 75 characters
+
+I chose a chunk size of 500 characters because my corpus contains regional
+travel guides made up of relatively short paragraphs and sections, with each
+paragraph usually covering a specific topic. When I looked at several
+documents, I noticed that useful information was often contained within
+individual paragraphs, so I wanted to keep those ideas together instead of
+cutting them at arbitrary character boundaries.
+
+I chose an overlap of 75 characters because some information may fall near a
+chunk boundary. The overlap keeps some context between neighbouring chunks
+without creating too much duplicated text.
 
 <!-- What about YOUR documents made you pick these numbers? Short posts and
      long sectioned guides don't want the same chunking, and "800 seemed
@@ -54,28 +65,60 @@
 
      Milestone 3. -->
 
-**Chunk 1** — source: `` — produced by: ``
+**Chunk 1** — source: `guide_accessibility.md#0` — produced by: `chunker.py::split_documents`
 
-```
-```
+> # Getting around the region with limited mobility
+>
+> An honest assessment rather than a promotional one. Some of these places are
+> difficult and it is better to know in advance.
+>
+> ## Straightforward
+>
+> **Thornby Wells** is the easiest town in the region. It is flat, compact, and
+> everything is within three minutes of everything else. Parking is free for two
+> hours anywhere in town and the station is central. The pump room and gardens are
+> level throughout.
 
-**Chunk 2** — source: `` — produced by: ``
+**Chunk 2** — source: `guide_corry_vale.md#5` — produced by: `chunker.py::split_documents`
 
-```
-```
+> n the second village is 12th century and always unlocked.
+>
+> ## Where to stay
+>
+> Perhaps thirty beds in the entire valley, spread across two pubs and a handful of farmhouse rooms. In summer these are booked months ahead. Camping is permitted on two marked fields and nowhere else.
+>
+> ## When to go
 
-**Chunk 3** — source: `` — produced by: ``
+**Chunk 3** — source: `guide_givens_mill.md#3` — produced by: `chunker.py::split_documents`
 
-```
-```
+> , food served lunchtimes and Thursday to Saturday evenings.
+>
+> ## What to see
+>
+> The mill runs tours on the hour from 11 to 3 and the machinery is operating during them, which is loud and much more impressive than a static exhibit. The church has a Saxon doorway. The river walk downstream reaches Brightwater in about three hours.
+>
+> ## Where to stay
 
-**Chunk 4** — source: `` — produced by: ``
+**Chunk 4** — source: `guide_marchwood.md#1` — produced by: `chunker.py::split_documents`
 
-```
-```
+> ne, since almost nothing of interest is near the station.
+>
+> ## Getting there
+>
+> Every railway line in the region meets here, which is the city's defining feature. Trains to Brightwater run every 40 minutes until 11pm. The airport is 20 minutes out by a dedicated bus that runs every 15 minutes and costs more than the equivalent taxi shared between three people.
+>
+> ## Getting around
 
-**Chunk 5** — source: `` — produced by: ``
+**Chunk 5** — source: `guide_regional_transport.md#5` — produced by: `chunker.py::split_documents`
 
+> den Bay coast road is cut into the cliff
+> and is slow rather than difficult.
+>
+> Parking is the constraint rather than driving. Both Halden Bay lots fill by
+> 10am on summer weekends. Kestrelford's lower car park is free and involves a
+> steep walk up.
+>
+> ## Walking and cycling
 ```
 ```
 
