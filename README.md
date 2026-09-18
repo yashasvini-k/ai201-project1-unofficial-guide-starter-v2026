@@ -284,6 +284,54 @@ question was slightly above the cutoff.
 
      Milestone 3. -->
 
+**Criterion 1 — Retrieved chunk contains the answer (MISSED)**
+
+Stage: retrieval.
+
+Confirmed by inspecting chunk boundaries directly (`python app.py chunks`):
+in both failing cases, the answer-bearing content exists as its own
+separate, cleanly-split chunk — the chunker isn't at fault, and retrieval
+simply didn't select the right chunk out of the ones available.
+
+- Q4 ("which places are challenging for a wheelchair user"): the answer
+  lives in `guide_accessibility.md#4` ("Difficult" section — Kestrelford,
+  Halden Bay: "hard going with luggage or a pushchair, let alone a
+  wheelchair", Corry Vale). This is a distinct chunk from
+  `guide_accessibility.md#0` ("Straightforward" section, Thornby Wells),
+  which is the chunk that was actually retrieved and used in all 3 runs.
+- Q3 (Brightwater food/opening hours): the answer lives in
+  `guide_eating.md#3` ("Opening hours" section — "kitchens across the
+  region stop serving at 9pm and often earlier"). This is a distinct chunk
+  from `guide_eating.md#1` ("The pattern worth knowing", pricing), which is
+  what was retrieved and used instead.
+
+Pattern: in both cases, embedding similarity favored a chunk that matches
+the question's general topic (accessibility, eating) over the chunk that
+actually contains the answer, because the answer chunk's distinguishing
+vocabulary (wheelchair, pushchair, opening hours, 9pm) carries less weight
+in semantic similarity than broad topical overlap. A keyword-matching
+method (BM25) would catch these exact terms directly.
+
+**Criterion 4 — Chunk completeness (MISSED)**
+
+Stage: chunking.
+
+4 of 5 sample chunks begin mid-word or mid-sentence (e.g. Chunk 2 of the
+original sample: "n the second village," Chunk 4: "ne, since almost
+nothing"). The chunker (`chunker.py::split_documents`) splits every 500
+characters with a fixed overlap and no check for sentence or word
+boundaries. This is a separate problem from Criterion 1 — the accessibility
+and eating chunks inspected above happened to split cleanly at section
+headers, but that's not guaranteed generally, as the original 5-chunk
+sample shows.
+
+**Pattern across both misses:** Criterion 1's failures are a retrieval
+problem (wrong chunk selected from otherwise well-formed chunks); Criterion
+4's failure is a chunking problem (chunks not reliably starting/ending on
+clean boundaries). They're independent issues at different pipeline stages,
+not the same root cause — worth noting since fixing one won't fix the
+other.
+
 ## The Improvement
 
 **What I changed:**
