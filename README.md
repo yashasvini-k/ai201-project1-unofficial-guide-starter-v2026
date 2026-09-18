@@ -230,13 +230,14 @@ question was slightly above the cutoff.
 
      Milestone 1. -->
 
+
 | Criterion | Target | Run 1 | Run 2 | Run 3 | Verdict |
 |---|---|---|---|---|---|
-| 1. Retrieved chunk contains the answer | 4 of 5 |  |  |  |  |
-| 2. Every answer names a source | 5 of 5 |  |  |  |  |
-| 3. Gate stops out-of-corpus questions | 4 of 5 |  |  |  |  |
-| 4. | | | | | |
-| 5. | | | | | |
+| 1. Retrieved chunk contains the answer | 4 of 5 | 3/5 | 3/5 | 3/5 | MISSED |
+| 2. Every answer names a source | 5 of 5 | 5/5 | 5/5 | 5/5 | MET |
+| 3. Gate stops out-of-corpus questions | 4 of 5 | 5/5 | 5/5 | 5/5 | MET |
+| 4. Chunk completeness | 4 of 5 | 1/5 | 1/5 | 1/5 | MISSED |
+| 5. Correct source attribution | 4 of 5 | 4/5 | 4/5 | 4/5 | MET |
 
 <!-- Underneath, paste the REAL output for each criterion from one of your
      runs — the actual text your system produced, not a description of it.
@@ -253,13 +254,15 @@ question was slightly above the cutoff.
 
      Milestone 2. -->
 
+
 | # | Criterion | Verdict | How I decided |
 |---|---|---|---|
-| 1 |  |  |  |
-| 2 |  |  |  |
-| 3 |  |  |  |
-| 4 |  |  |  |
-| 5 |  |  |  |
+| 1 | Retrieved chunk contains the answer (4 of 5) | MISSED | 3/5 in all three runs. Q3 (food/hours) and Q4 (wheelchair) both failed — the correct sentence exists in the source doc but wasn't in the retrieved chunk used for generation. |
+| 2 | Every answer names a source (5 of 5) | MET | All 5 questions cited a source document in every run, including Q4, which named `guide_accessibility.md` even though it couldn't answer. |
+| 3 | Gate stops out-of-corpus questions (4 of 5) | MET | 5/5 refused, well above target. Measured once since the gate is deterministic. |
+| 4 | Chunk completeness (4 of 5) | MISSED | 1/5 sample chunks start on a clean sentence boundary. Chunks 2–5 all begin mid-word or mid-sentence (e.g. "n the second village," "ne, since almost nothing"), showing the chunker splits on a fixed character count with no boundary awareness. |
+| 5 | Correct source attribution (4 of 5) | MET | 4/5 — Q1, Q2, Q3, Q5 named the document that actually matches the question topic. Q4 didn't attribute anything since it never answered. |
+
 
 ## Diagnoses
 
