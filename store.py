@@ -20,6 +20,7 @@ rest of the project if they were wrong:
 import os
 import shutil
 from dataclasses import dataclass
+from rank_bm25 import BM25Okapi
 
 # Must be set BEFORE chromadb is imported. Without it, some Chroma versions
 # print "Failed to send telemetry event ..." on every single call — which looks
@@ -134,6 +135,23 @@ def _client():
     )
 
 
+_bm25_cache: dict[str, tuple[BM25Okapi, list[str], list[dict]]] = {}
+
+
+def _tokenize(text: str) -> list[str]:
+    return text.lower().split()
+
+
+def _bm25_for_collection(collection, name: str):
+    """Build (and cache) a BM25 index over every chunk in this collection."""
+    if name not in _bm25_cache:
+        all_docs = collection.get(include=["documents", "metadatas"])
+        texts = all_docs["documents"]
+        metas = all_docs["metadatas"]
+        bm25 = BM25Okapi([_tokenize(t) for t in texts])
+        _bm25_cache[name] = (bm25, texts, metas)
+    return _bm25_cache[name]
+
 def build_index(
     chunks: list[Chunk],
     corpus: str | None = None,
@@ -185,9 +203,12 @@ def search(
     variant: str = "default",
 ) -> list[Result]:
     """
-    Retrieve the chunks closest in meaning to a question.
+    Retrieve the chunks closest in meaning to a question, combining
+    semantic similarity with BM25 keyword matching (hybrid search).
 
-    Returns them nearest-first, each with its distance.
+    `distance` on each Result is still the true semantic distance, so the
+    relevance gate's cutoff stays meaningful. Only the ranking/selection
+    of which chunks count as "top" is affected by the BM25 blend.
     """
     top_k = top_k or config.TOP_K
     name = config.collection_name(corpus, variant)
@@ -199,21 +220,43 @@ def search(
             f"No index called '{name}'. Run `python app.py index` first."
         ) from exc
 
+    n = collection.count()
+
+    # Pull the FULL semantic ranking (not just top_k) so we can re-rank
+    # against BM25 before truncating.
     raw = collection.query(
         query_embeddings=embed([question]),
-        n_results=min(top_k, collection.count()),
+        n_results=n,
     )
+    texts = raw["documents"][0]
+    metas = raw["metadatas"][0]
+    distances = raw["distances"][0]
+
+    # Semantic similarity (higher = better), normalized to [0, 1]
+    sem_sim = [1.0 - d for d in distances]
+    lo, hi = min(sem_sim), max(sem_sim)
+    norm_sem = [(s - lo) / (hi - lo + 1e-9) for s in sem_sim]
+
+    # BM25 keyword score for the same chunks, normalized to [0, 1]
+    bm25, all_texts, all_metas = _bm25_for_collection(collection, name)
+    bm25_scores_by_text = dict(zip(all_texts, bm25.get_scores(_tokenize(question))))
+    bm_scores = [bm25_scores_by_text.get(t, 0.0) for t in texts]
+    lo_b, hi_b = min(bm_scores), max(bm_scores)
+    norm_bm = [(b - lo_b) / (hi_b - lo_b + 1e-9) for b in bm_scores]
+
+    # Combine 50/50 and take the new top_k by combined score
+    combined = [0.5 * s + 0.5 * b for s, b in zip(norm_sem, norm_bm)]
+    order = sorted(range(len(combined)), key=lambda i: -combined[i])[:top_k]
 
     results: list[Result] = []
-    for text, meta, distance in zip(
-        raw["documents"][0], raw["metadatas"][0], raw["distances"][0]
-    ):
+    for i in order:
+        meta = metas[i]
         results.append(
             Result(
-                text=text,
+                text=texts[i],
                 source=str(meta.get("source", "unknown")),
                 label=f"{meta.get('source', 'unknown')}#{meta.get('index', 0)}",
-                distance=float(distance),
+                distance=float(distances[i]),  # unchanged: true semantic distance
                 produced_by=str(meta.get("produced_by", "unknown")),
             )
         )
