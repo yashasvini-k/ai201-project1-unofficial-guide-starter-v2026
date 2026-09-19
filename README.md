@@ -205,6 +205,11 @@ questions, and AI helped me compare the two groups. I kept the cutoff at 0.6
 because it rejected all five out-of-scope questions, although one in-scope
 question was slightly above the cutoff.
 
+
+**3.** 
+
+I used AI to help implement hybrid search after diagnosing that both Criterion 1 failures were caused by embedding similarity missing chunks with strong exact-term matches. I shared my `store.py::search` and `build_index` functions, and AI wrote the BM25 integration (tokenizing chunks, caching a BM25 index per collection, normalizing and blending BM25 and semantic scores 50/50) while preserving the original semantic distance value used by my relevance gate, so the 0.6 cutoff would stay valid. I ran the after-eval myself, read the actual output line by line, and found that the fix worked for one question (Q3) but introduced a new failure on a different question (Q2) — a result the code alone didn't tell me; I found it by comparing before/after answer text directly.
+
 <!-- ── Stretch features ─────────────────────────────────────────────────────
      Doing one? Say so here BEFORE you start. A feature this README never
      claims earns nothing.
@@ -390,9 +395,22 @@ This is a useful result even though it didn't clear the criterion: it shows a 50
 
      Milestone 5. -->
 
+**Criterion 1 (retrieved chunk contains the answer) — still MISSED, 3/5.** Two distinct failures remain, though they aren't the same two as before: 
+
+- *Q4 (wheelchair-challenging places)* was diagnosed as a retrieval problem in Milestone 3 and is still unfixed after hybrid search. The "Difficult" section of `guide_accessibility.md` (chunk `#4`, which names Halden Bay as "hard going with luggage or a pushchair, let alone a wheelchair") still never enters the top-k. My 50/50 semantic/BM25 blend wasn't enough to overcome the strength of the semantic match on "Straightforward" (chunk `#0`). Next step: try weighting BM25 more heavily, or check whether "wheelchair" needs to be in the BM25 corpus's vocabulary at all — if the tokenizer is lowercasing and splitting on whitespace only, "wheelchair" vs. "pushchair" won't match as a shared token, so BM25 may be scoring this case no better than semantic search did. 
+
+- *Q2 (Brightwater accessibility options)* is a new regression introduced by hybrid search. It previously worked because `guide_accessibility.md` was retrieved and used; now `guide_brightwater.md` wins the combined ranking instead, and it only covers the transport half of the question. Next step: investigate whether increasing top_k (so both documents' chunks fit in the context sent to generation, instead of one crowding out the other) would resolve this without another retrieval change.
+
+**Criterion 4 (chunk completeness) — still MISSED, 1/5.** Untouched, since this unit's improvement targeted retrieval, not chunking. The fix here is straightforward but out of scope for this unit's one-change rule: replace the fixed 500-character split in `chunker.py::split_documents` with a boundary-aware split (break on paragraph or sentence marks, only falling back to a character limit if a section is unusually long). I stopped here because I'd already diagnosed Criterion 1 as the more consequential failure, and the assignment only allows one change per unit.
+
+
 ## What I'd Do Differently
 
 <!-- Knowing what you know now — which of your five criteria would you write
      differently, and why?
 
      Milestone 5. -->
+
+Knowing what I know now, I'd rewrite **Criterion 1** to require the correct chunk be present for the *same set of questions* across an improvement, not just to hit an aggregate count. "3 of 5, met" and "3 of 5, but a different 2 failed" look identical in a plain count but mean very different things — the second is a wash, not a non-result. A criterion that names which questions must pass (or tracks pass/fail per-question across changes) would have caught the Q2 regression in the number itself, not just in the prose underneath it. 
+
+I'd also tighten **Criterion 3** (the gate). It cleared 5/5 on the very first run and never moved, which suggests my five out-of-scope questions (capital of Mongolia, oil changes, a World Cup result, ibuprofen dosage, a Rust for-loop) were too obviously irrelevant to the corpus to test the gate meaningfully. A tighter version would include borderline questions — travel topics adjacent to but outside this specific region's guides — to see whether the cutoff actually discriminates or just catches the easy cases.
