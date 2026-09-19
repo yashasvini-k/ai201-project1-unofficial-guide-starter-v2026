@@ -335,11 +335,20 @@ other.
 ## The Improvement
 
 **What I changed:**
+Added BM25 keyword search alongside the existing
+semantic (embedding) search, and combined both result sets before passing
+chunks to generation.
 
 **Why I picked it:**
 
 <!-- Connect it to a specific diagnosis above in one sentence. If you can't,
      you picked a fix because it sounded impressive. -->
+
+The Criterion 1 diagnosis showed both misses were
+caused by embedding similarity missing chunks with exact-term matches
+("wheelchair," "opening hours") in favor of topically-similar-but-wrong
+chunks. BM25 catches literal term overlap that semantic similarity
+underweights.
 
 ### Run Log — After
 
@@ -348,11 +357,12 @@ other.
 
 | Criterion | Target | Run 1 | Run 2 | Run 3 | Verdict |
 |---|---|---|---|---|---|
-| 1. Retrieved chunk contains the answer | 4 of 5 |  |  |  |  |
-| 2. Every answer names a source | 5 of 5 |  |  |  |  |
-| 3. Gate stops out-of-corpus questions | 4 of 5 |  |  |  |  |
-| 4. | | | | | |
-| 5. | | | | | |
+| 1. Retrieved chunk contains the answer | 4 of 5 | 3/5 | 3/5 | 3/5 | MISSED |
+| 2. Every answer names a source | 5 of 5 | 5/5 | 5/5 | 5/5 | MET |
+| 3. Gate stops out-of-corpus questions | 4 of 5 | 5/5 | 5/5 | 5/5 | MET |
+| 4. Chunk completeness | 4 of 5 | 1/5 | 1/5 | 1/5 | MISSED |
+| 5. Correct source attribution | 4 of 5 | 4/5 | 4/5 | 4/5 | MET |
+
 
 **Did it help?**
 
@@ -362,6 +372,13 @@ other.
      tell.
 
      Milestone 4. -->
+
+Mixed, and net neutral on the criterion that mattered most. Hybrid search fixed Q3 exactly as diagnosed — the "Opening hours" chunk (`guide_eating.md#3`) now makes it into the top-k, and all three runs correctly state kitchens stop serving at 9pm. But it introduced a new failure on Q2: retrieval swapped `guide_accessibility.md` (which fully answered the question before) for `guide_brightwater.md` (which only answers half of it), so the system now claims it lacks information it previously had. Q4, the other diagnosed failure, was untouched — BM25 apparently didn't weight "wheelchair" heavily enough to pull in the "Difficult" section chunk over "Straightforward."
+
+Net result: Criterion 1 stayed at 3/5 in all three runs, unchanged from before. The fix didn't move the aggregate number, though it changed *which* questions fail. Criterion 4 is unaffected, as expected, since hybrid search doesn't touch chunking. 
+
+This is a useful result even though it didn't clear the criterion: it shows a 50/50 semantic/BM25 weighting isn't obviously better than pure semantic search for this corpus — it just moves the failure around. A next step worth trying would be weighting BM25 more heavily only for questions containing rare, specific nouns (like "wheelchair"), or tuning the blend ratio rather than a flat 50/50 split.
+
 
 ## What's Still Broken
 
